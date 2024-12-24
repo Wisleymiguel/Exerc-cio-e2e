@@ -29,7 +29,7 @@ context('Funcionalidade Login', () => {
     });
 
     it.skip('Deve fazer login com sucesso - sem otimização', () => {
-        cy.get('#username').type(dadosLogin.usuario)
+        cy.get('#username').type(fa)
         cy.get('#password').type(dadosLogin.senha, { log: false })
         cy.get('.woocommerce-form > .button').click()
         cy.get('.page-title').should('contain', 'Minha conta')
