@@ -11,10 +11,16 @@ context('Funcionalidade Login', () => {
     beforeEach(() => {
         cy.visit('minha-conta')
     });
-
+it.only('Deve fazer login com sucesso', () => { 
+        cy.get('#username').type('wisley.teste@teste.com.br')
+        cy.get('#password').type('teste@123')
+        cy.get('.woocommerce-form > .button').click()
+        cy.get('.woocommerce-MyAccount-content > :nth-child(2)').should ('contain', 'Olá, wisley')
+      });
     afterEach(() => {
         cy.screenshot()
     });
+    
 
     it('Login com sucesso usando Comando customizado', () => {
         cy.login(dadosLogin.usuario, dadosLogin.senha)
@@ -28,8 +34,8 @@ context('Funcionalidade Login', () => {
         cy.get('.page-title').should('contain', 'Minha conta')
     });
 
-    it.skip('Deve fazer login com sucesso - sem otimização', () => {
-        cy.get('#username').type(fa)
+    it('Deve fazer login com sucesso - sem otimização', () => {
+        cy.get('#username').type(dadosLogin.usuario)
         cy.get('#password').type(dadosLogin.senha, { log: false })
         cy.get('.woocommerce-form > .button').click()
         cy.get('.page-title').should('contain', 'Minha conta')
