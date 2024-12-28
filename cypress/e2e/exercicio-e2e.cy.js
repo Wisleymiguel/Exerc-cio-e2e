@@ -1,79 +1,56 @@
 /// <reference types="cypress" />
-
-import exercicioPage from "../support/page_objects/exercicio.page";
+import exercicioPage from "../support/page_objects/exercicio.page"; // Atualizado para o caminho correto
 import { faker } from "@faker-js/faker";
 
+let dadosLogin;
+
 context('Exercicio - Testes End-to-end - Fluxo de pedido', () => {
-  /*  
-      Cenário:
-      Como cliente 
-      Quero acessar a Loja EBAC 
-      Para fazer um pedido de 4 produtos 
-      Fazendo a escolha dos produtos
-      Adicionando ao carrinho
-      Preenchendo todas opções no checkout
-      E validando minha compra ao final 
-  */
+    before(() => {
+        // Carregar dados de login do arquivo perfil.json
+        cy.fixture('perfil').then(perfil => {
+            dadosLogin = perfil;
+        });
+    });
 
-  const dadosCliente = {
-    nome: faker.person.firstName(),
-    sobrenome: faker.person.lastName(),
-    pais: 'Brasil',
-    endereco: 'Apartamento',
-    cidade: faker.location.city(),
-    estado: 'Minas Gerais',
-    cep: '32907-000',
-    telefone: '+55 (31) 996628240',
-    email: faker.internet.email(),
-    senha: faker.internet.password(),
-  };
-  beforeEach(() => {
-    cy.visit('minha-conta')
-    cy.get('#reg_email').type(faker.internet.email())
-    cy.get('#reg_password').type(faker.internet.password())
-    cy.get(':nth-child(4) > .button').click()
-});
+    beforeEach(() => {
+        cy.login(dadosLogin.usuario, dadosLogin.senha); // Use o comando customizado
+    });
+
+    it('Deve adicionar produto ao carrinho e finalizar compra', () => {
+        // Buscar o produto
+        exercicioPage.buscarProduto('Ingrid Running Jacket');
+
+        // Adicionar o produto 1 ao carrinho
+        exercicioPage.addProdutoCarrinho('M', 'Red', 2);
+        cy.get('.woocommerce-message > .button').click();
+        //Adicionar o produto 2 ao carrinho
+        exercicioPage.buscarProduto('Eos V-Neck Hoodie');
+        exercicioPage.addProdutoCarrinho('M', 'Blue', 2);
+        cy.get('.woocommerce-message > .button').click();
 
 
-  beforeEach(() => {
-    exercicioPage.visitarUrl(); // URL definida em `exercicioPage`
-  });
+        // Ir para a página de checkout
+        cy.get('.checkout-button').click();
 
-  it('Deve adicionar produtos ao carrinho e finalizar compra', () => {
-    // Adicionando produto ao carrinho
-    exercicioPage.buscarProduto('Ingrid Running Jacket');
-    exercicioPage.addProdutoCarrinho('M', 'Red', 2);
+        // Preencher o formulário de checkout usando o método da classe
+        exercicioPage.preencherFormulario({
+            nome: faker.person.firstName(),
+            sobrenome: faker.person.lastName(),
+            pais: 'Brasil',
+            endereco: 'Apartamento',
+            cidade: faker.location.city(),
+            estado: 'Minas Gerais',
+            cep: '32907-000',
+            telefone:'31 996622840',
+            email: faker.internet.email(),
+            senha: faker.internet.password(),
+        });
 
-    // Navegando para o checkout
-    cy.get('.woocommerce-message > .button').click();
-    cy.get('.checkout-button').click();
+        // Aceitar os termos e finalizar o pedido
+        cy.get('#terms').click();
+        cy.get('#place_order').click();
 
-    // Preenchendo o formulário de checkout
-    preencherFormulario(dadosCliente);
-
-    // Finalizando o pedido
-    cy.get('#terms').click();
-    cy.get('#place_order').click();
-
-    // Validando a confirmação do pedido
-    cy.get('.page-title').should('exist');
-  });
-
-  // Função auxiliar para preencher o formulário
-  function preencherFormulario(cliente) {
-    cy.get('#billing_first_name').type(cliente.nome);
-    cy.get('#billing_last_name').type(cliente.sobrenome);
-    cy.get('#select2-billing_country-container').click();
-    cy.get('.select2-search__field').type(cliente.pais).type('{enter}');
-    cy.get('#billing_address_1').type(cliente.endereco);
-    cy.get('#billing_city').type(cliente.cidade);
-    cy.get('#select2-billing_state-container').click();
-    cy.get('.select2-search__field').type(cliente.estado).type('{enter}');
-    cy.get('#billing_postcode').type(cliente.cep, { force: true });
-    cy.get('#billing_phone').clear().type(cliente.telefone);
-
-   // cy.get('#billing_email').type(cliente.email);
-    //cy.get(':nth-child(4) > .button').click()
-   // cy.get('#place_order').click()
-  }
+        // Validar que o pedido foi finalizado com sucesso
+        cy.get('.page-title').should('exist');
+    });
 });
